@@ -24,7 +24,7 @@ An excel file containing the corresponding protein domains (file name defined in
 
 # Execution Flow
 1. Set the required parameters in `./config/config.toml`
-1. Run `main.py`
+1. Run `./src/main.py`
 
 # Requirements
 1. Python >= 3.11
