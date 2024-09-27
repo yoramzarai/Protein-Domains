@@ -1,0 +1,31 @@
+# Protein domains configuration.
+
+[Framework]
+Name = "UniProt Protein Domains"
+Name_verbose = "Retrieve UniProt protein domains given Ensembl transcript ID."
+Version = "0.1"
+Author = "YZ"
+
+[Transcript]
+file = "./src/data/transcript_list_DE.txt"  # Set the text file name containing Ensembl transcript ID per line
+
+[Assembly]
+version = "GRCh38"  # Set the Assembly to use ("GRCh38" or "GRCh37")
+
+[IDs]
+get_gene_id = true  # Set true [false] to enable [disable] gene ID retrieval
+get_gene_name = true  # Set true [false] to enable [disable] gene name retrieval
+get_protein_id = true  # Set true [false] to enable [disable] protein ID retrieval
+get_uniprot_url = true  # Set true [false] to enable [disable] UniProt URL retrieval
+
+[Domains]
+uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of featuers to retrieve. Set to [] to get all features.
+
+[Output]
+file = "./src/output/transcript_domains_DE.xlsx"  # Set the output excel file name
+format = "expanded"  # Set to "basic": all transcripts and domains are listed in one excel sheet, where each row represents a domain.
+                # Set to "compact": all transcripts and domains are listed in one excel sheet, where each row represents a transcript (all domains are aggregated in one cell)
+                # Set to "expanded":  each transcript (and its domains) are listed in a separate excel sheet
+
+[Debug]
+enable = true  # Set to false [true] to disable [enable] debug prints
