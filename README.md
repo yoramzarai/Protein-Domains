@@ -31,5 +31,5 @@ An excel file containing the corresponding protein domains (file name defined in
 1. pandas
 1. XlsxWriter
 1. requests
-1. From my `Cancer_mut/Utils/` folder, the modules `toml_utils.py`, `uniprot_utils.py`, `rest_api_utils.py`, `ensembl_rest_utils`
+1. From my [`Utils/`](https://github.com/yoramzarai/Utils) repository, the modules `toml_utils.py`, `uniprot_utils.py`, `rest_api_utils.py`, `ensembl_rest_utils`
 
