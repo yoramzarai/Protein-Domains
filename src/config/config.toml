@@ -7,7 +7,10 @@ Version = "0.1"
 Author = "YZ"
 
 [Transcript]
-file = "./src/data/transcript_list_DE.txt"  # Set the text file name containing Ensembl transcript ID per line
+text_file = "./src/data/transcript_list_DE.txt"  # Set the text file name containing Ensembl transcript ID per line
+csv_file = ".src/data/?.csv"  # Loading from a CSV file (comma separated). CURRENTLY NOT SUPPORTED
+csv_file_transcript_col_name = "Transcript_ID"  # column name in csv_file containing the transcript IDs. CURRENTLY NOT SUPPORTED
+
 
 [Assembly]
 version = "GRCh38"  # Set the Assembly to use ("GRCh38" or "GRCh37")
@@ -24,7 +27,8 @@ uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "
 [Output]
 file = "./src/output/transcript_domains_DE.xlsx"  # Set the output excel file name
 format = "expanded"  # Set to "basic": all transcripts and domains are listed in one excel sheet, where each row represents a domain.
-                # Set to "compact": all transcripts and domains are listed in one excel sheet, where each row represents a transcript (all domains are aggregated in one cell)
+                # Set to "compact": all transcripts and domains are listed in one excel sheet, where each row represents a transcript 
+                # (all domains are aggregated in one cell, domains are '|' separated, domain's fields are ',' separated.)
                 # Set to "expanded":  each transcript (and its domains) are listed in a separate excel sheet
 
 [Debug]

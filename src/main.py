@@ -1,6 +1,6 @@
 # pylint: disable=line-too-long,invalid-name,pointless-string-statement,too-many-arguments
 """
-Main script for retrieving protein domains.
+Main script for retrieving human protein domains.
 
 1. Set the parameters in ./config/config.toml
 2. Run this script.
@@ -17,7 +17,7 @@ def main() -> None:
         u.print_config(cnfg_data)
 
     # load transcripts and remove version (if exists)
-    transcripts = [x.split('.')[0] for x in u.get_transcripts(cnfg_data)]
+    transcripts = [x.split('.')[0] for x in u.load_transcripts_text(cnfg_data)]
     if debug:
         print(f"\nLoaded {len(transcripts):,} transcripts:\n{transcripts}")
 

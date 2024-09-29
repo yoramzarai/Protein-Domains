@@ -4,6 +4,7 @@ Utils for main.py.
 """
 import pathlib
 from dataclasses import dataclass
+from typing import Callable
 import pandas as pd
 import toml_utils as tmut
 import uniprot_utils as uput  # in my Utils/ folder
@@ -13,13 +14,9 @@ import ensembl_rest_utils as erut  # in my Utils/ folder
 # configuration Toml file
 Cnfg_Toml_file: pathlib.Path = pathlib.Path('./src/config/config.toml')
 
-# Uniprot URL of a UniProt ID DUMMYID (DUMMYID will be replaced by a valid UniProt UD)
-Uniprot_url_template: str = "https://www.uniprot.org/uniprotkb/DUMMYID/entry"
-
-
 @dataclass
 class Labels:
-    """Labels"""
+    """Label names."""
     Transcript_ID: str = 'Transcript_ID'
     Protein_ID: str = 'Protein_ID'
     Gene_name: str = 'Gene_name'
@@ -27,6 +24,18 @@ class Labels:
     UniProt_ID: str = 'UniProt_ID'
     UniProt_URL: str = 'UniProt_URL'
     Domains: str = 'Domains'
+
+# update Uniprot_url_template based on uniprot_id
+get_uniprot_url: Callable[[str], str] = lambda uniprot_id: f"https://www.uniprot.org/uniprotkb/{uniprot_id}/entry"
+
+def check_configuration(cnfg_data: dict) -> None:
+    """Check configuration validity."""
+    assert cnfg_data['Assembly']['version'] in ["GRCh37", "GRCh38"], f"Aeembly version {cnfg_data['Assembly']['version']} not supported !!"
+    assert cnfg_data['Output']['format'] in ["basic", "compact", "expanded"], f"Output format {cnfg_data['Output']['format']} not supported !!"
+    if not pathlib.Path(cnfg_data['Transcript']['text_file']).is_file():
+        raise FileNotFoundError(f"Cannot find input transcript file {cnfg_data['Transcript']['text_file']} !!")
+    if not isinstance(cnfg_data['Domains']['uniprot_features'], list):
+        raise TypeError(f"Domain:features in {Cnfg_Toml_file} must contain a list of UniProt domains !!")
 
 def load_config() -> dict:
     """Loads the Toml configuration file."""
@@ -39,15 +48,6 @@ def print_config(cnfg_data: dict) -> None:
     """Pretty print of config data."""
     tmut.print_nested_dicts(cnfg_data)
 
-def check_configuration(cnfg_data: dict) -> None:
-    """Check configuration validity."""
-    assert cnfg_data['Assembly']['version'] in ["GRCh37", "GRCh38"], f"Aeembly version {cnfg_data['Assembly']['version']} not supported !!"
-    assert cnfg_data['Output']['format'] in ["basic", "compact", "expanded"], f"Output format {cnfg_data['Output']['format']} not supported !!"
-    if not pathlib.Path(cnfg_data['Transcript']['file']).is_file():
-        raise FileNotFoundError(f"Cannot find input transcript file {cnfg_data['Transcript']['file']} !!")
-    if not isinstance(cnfg_data['Domains']['uniprot_features'], list):
-        raise TypeError(f"Domain:features in {Cnfg_Toml_file} must contain a list of UniProt domains !!")
-
 # this function was taken from myutils.py
 def dfs_to_excel_file(dfs: list[pd.DataFrame], excel_file_name: str, sheet_names: list[str],
                       add_index: bool = False,
@@ -56,7 +56,7 @@ def dfs_to_excel_file(dfs: list[pd.DataFrame], excel_file_name: str, sheet_names
                       extra_width: int = 0,
                       header_format: dict | None = None) -> None:
     """
-    Write DataFrames to excel, while auto adjusting column widths based on the data.
+    Write DataFrames to excel (each in a separate sheet), while auto adjusting column widths based on the data.
     """
     if len(dfs) != len(sheet_names):
         raise ValueError("dfs_to_excel_file: the numbers of dfs and sheet names must match !!")
@@ -77,14 +77,25 @@ def dfs_to_excel_file(dfs: list[pd.DataFrame], excel_file_name: str, sheet_names
                 for col_num, value in enumerate(df.columns.values):
                     worksheet.write(0, col_num, value, h_format)
 
-
-def get_transcripts(cnfg_data: dict) -> list[str]:
-    """Reads the transcripts input file and returns the transcript IDs."""
+def load_transcripts_excel(cnfg_data: dict) ->list[str]:
+    """
+    Loading transcript IDs from the input csv file and returning the transcript IDs. 
+    
+    CURRENTLY NOT SUPPORTED !!
+    """
     try:
-        with open(cnfg_data['Transcript']['file'], 'rt', encoding='UTF-8') as fp:
+        return pd.read_csv(cnfg_data['Transcript']['csv_file'], sep=',')[cnfg_data['Transcript']['csv_file_transcript_col_name']].unique().tolist()
+    except (FileNotFoundError, KeyError) as e:
+        print(f"Error in loading transcripts from the column {cnfg_data['Transcript']['csv_file_transcript_col_name']} in {cnfg_data['Transcript']['csv_file']} file: {e}")
+        raise
+
+def load_transcripts_text(cnfg_data: dict) -> list[str]:
+    """Loading transcript IDs from the input text file and returning the transcript IDs."""
+    try:
+        with open(cnfg_data['Transcript']['text_file'], 'rt', encoding='UTF-8') as fp:
             return [x for x in [line.rstrip() for line in fp] if 'ENST' in x]
     except FileNotFoundError:
-        print(f"Can not find input transcripts file {cnfg_data['Transcript']['transcript_file']}. Please check configuration file, under ['Transcript']['transcript_file'] !!")
+        print(f"Can not find input transcripts file {cnfg_data['Transcript']['text_file']}. Please check configuration file, under ['Transcript']['text_file'] !!")
         raise
 
 def get_transcripts_IDs(cnfg_data: dict, transcripts: list[str]) -> dict[str,dict[str,str]]:
@@ -106,7 +117,7 @@ def get_transcripts_IDs(cnfg_data: dict, transcripts: list[str]) -> dict[str,dic
             Labels.Gene_ID: ensg_id if cnfg_data['IDs']['get_gene_id'] else '',
             Labels.Gene_name: ensg_name if cnfg_data['IDs']['get_gene_name'] else '',
             Labels.UniProt_ID: uniprot_id,
-            Labels.UniProt_URL: Uniprot_url_template.replace('DUMMYID', uniprot_id) if cnfg_data['IDs']['get_uniprot_url'] else ''
+            Labels.UniProt_URL: get_uniprot_url(uniprot_id) if cnfg_data['IDs']['get_uniprot_url'] else ''
         }
     return info
 
@@ -117,11 +128,30 @@ def get_uniprot_domains(cnfg_data: dict, transcripts_ids: dict[str,dict[str,str]
     for transcript, transcript_ids in transcripts_ids.items():
         if (df_uniprot := uput.retrieve_protein_data_features_subset(transcript_ids[Labels.UniProt_ID], features)).empty:
             print(f"\n[** No {features} UniProt features were found for {transcript} (UniProt ID={transcript_ids[Labels.UniProt_ID]}) **]\n")
+            # we do not use continue so that the domains for this transcript will be empty in the output file
         info[transcript] = {
             'domains_df': df_uniprot,  # in a dataframe format
             'domains_list': list(df_uniprot.T.to_dict().values())  # in a list of domains format
         } | transcript_ids
     return info
+
+
+def _append_optional_IDs_to_df(cnfg_data: dict, df: pd.DataFrame, start_index: int, ids_dict: dict) -> pd.DataFrame:
+    """Append optional ID columns based on configuration to inut dataframe."""
+    dfc = df.copy()
+    if cnfg_data['IDs']['get_gene_id']:
+        dfc.insert(start_index, Labels.Gene_ID, ids_dict[Labels.Gene_ID])
+        start_index += 1
+    if cnfg_data['IDs']['get_gene_name']:
+        dfc.insert(start_index, Labels.Gene_name, ids_dict[Labels.Gene_name])
+        start_index += 1
+    if cnfg_data['IDs']['get_protein_id']:
+        dfc.insert(start_index, Labels.Protein_ID, ids_dict[Labels.Protein_ID])
+        start_index += 1
+    if cnfg_data['IDs']['get_uniprot_url']:
+        dfc.insert(start_index, Labels.UniProt_URL, ids_dict[Labels.UniProt_URL])
+    return dfc
+
 
 def _gen_basic_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> pd.DataFrame:
     """Generate a dataframe with all transcripts, where each domain is listed in a separate row."""
@@ -130,19 +160,7 @@ def _gen_basic_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,d
         df: pd.DataFrame = v['domains_df'].copy()
         df.insert(0, Labels.Transcript_ID, k)
         df.insert(1, Labels.UniProt_ID, v[Labels.UniProt_ID])
-        i = 2
-        if cnfg_data['IDs']['get_gene_id']:
-            df.insert(i, Labels.Gene_ID, v[Labels.Gene_ID])
-            i += 1
-        if cnfg_data['IDs']['get_gene_name']:
-            df.insert(i, Labels.Gene_name, v[Labels.Gene_name])
-            i += 1
-        if cnfg_data['IDs']['get_protein_id']:
-            df.insert(i, Labels.Protein_ID, v[Labels.Protein_ID])
-            i += 1
-        if cnfg_data['IDs']['get_uniprot_url']:
-            df.insert(i, Labels.UniProt_URL, v[Labels.UniProt_URL])
-
+        df = _append_optional_IDs_to_df(cnfg_data, df, 2, v)
         all_dfs.append(df)
     return pd.concat(all_dfs).reset_index(drop=True)
 
@@ -155,18 +173,7 @@ def _gen_compact_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str
             Labels.Transcript_ID: k,
             Labels.UniProt_ID: v[Labels.UniProt_ID]
         }, index=[0])
-        i = 2
-        if cnfg_data['IDs']['get_gene_id']:
-            df.insert(i, Labels.Gene_ID, v[Labels.Gene_ID])
-            i += 1
-        if cnfg_data['IDs']['get_gene_name']:
-            df.insert(i, Labels.Gene_name, v[Labels.Gene_name])
-            i += 1
-        if cnfg_data['IDs']['get_protein_id']:
-            df.insert(i, Labels.Protein_ID, v[Labels.Protein_ID])
-            i += 1
-        if cnfg_data['IDs']['get_uniprot_url']:
-            df.insert(i, Labels.UniProt_URL, v[Labels.UniProt_URL])
+        df = _append_optional_IDs_to_df(cnfg_data, df, 2, v)
         df[Labels.Domains] = "|".join([",".join([f"{k}:{v}" for k, v in x.items()]) for x in v['domains_list']])
         all_dfs.append(df)
     return pd.concat(all_dfs).reset_index(drop=True)
