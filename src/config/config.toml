@@ -23,7 +23,7 @@ show_uniprot_id = true  # Set true [false] to enable [disable] reporting UniProt
 show_uniprot_url = true  # Set true [false] to enable [disable] reporting UniProt URL
 
 [Domains]
-uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of featuers to retrieve. Set to [] to retrieve all features.
+uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of features to retrieve. Set to [] to retrieve all features.
 
 [Output]
 file = "./src/output/transcript_domains_DE.xlsx"  # Set the output excel file name
