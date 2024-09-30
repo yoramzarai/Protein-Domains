@@ -14,6 +14,15 @@ import ensembl_rest_utils as erut  # in my Utils/ folder
 # configuration Toml file
 Cnfg_Toml_file: pathlib.Path = pathlib.Path('./src/config/config.toml')
 
+class Configuration_Error(Exception):
+    """Invalid configuration exception."""
+    def __init__(self, message: str):
+        self.message: str = message
+
+    def __str__(self):
+        return repr(f"{self.message}. Please check {str(Cnfg_Toml_file)}.")
+
+
 @dataclass
 class Labels:
     """Label names."""
@@ -36,6 +45,11 @@ def check_configuration(cnfg_data: dict) -> None:
         raise FileNotFoundError(f"Cannot find input transcript file {cnfg_data['Transcript']['file']} !!")
     if not isinstance(cnfg_data['Domains']['uniprot_features'], list):
         raise TypeError(f"Domain:features in {Cnfg_Toml_file} must contain a list of UniProt domains !!")
+    if (pathlib.Path(cnfg_data['Output']['file']).suffix == '.csv') and (cnfg_data['Output']['format'] == 'expanded'):
+        raise Configuration_Error("CSV output file not supported for 'expanded' output format !!")
+    if pathlib.Path(cnfg_data['Output']['file']).suffix not in ['.xlsx', '.xls', '.csv']:
+        raise Configuration_Error(f"Output file {cnfg_data['Output']['file']} not supported (only excel and CSV are supported) !!")
+
 
 def load_config() -> dict:
     """Loads the Toml configuration file."""
@@ -206,4 +220,10 @@ def generate_output_table(cnfg_data: dict, transcripts_domains: dict[str,dict]) 
 def generate_output_file(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> None:
     """Generates the ouput file containing the IDs and domains"""
     dfs, sheet_names = generate_output_table(cnfg_data, transcripts_domains)
-    dfs_to_excel_file(dfs, cnfg_data['Output']['file'], sheet_names=sheet_names, add_index=False, extra_width=2)
+    match pathlib.Path(cnfg_data['Output']['file']).suffix:
+        case '.csv':
+            dfs[0].to_csv(cnfg_data['Output']['file'], sep=',', index=False)
+        case '.xlsx' | '.xls':
+            dfs_to_excel_file(dfs, cnfg_data['Output']['file'], sheet_names=sheet_names, add_index=False, extra_width=2)
+        case _:
+            raise Configuration_Error(f"Output file {cnfg_data['Output']['file']} not supported (only excel and CSV are supported) !!")

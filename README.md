@@ -22,7 +22,7 @@ ENST00000559488
 ```
 
 # Output
-An excel file containing the corresponding protein domains (excel file name defined in `./src/config/config.toml`).
+An excel or CSV file containing the corresponding protein domains (file name defined in `./src/config/config.toml`).
 
 # Execution Flow
 1. Set the configuration parameters in `./src/config/config.toml`
