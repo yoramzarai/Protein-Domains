@@ -9,10 +9,10 @@ Given a list of Ensembl transcript IDs (i.e. ENST IDs), we:
 
 
 # Configuration File
-`./config/config.toml`
+`./src/config/config.toml`
 
 # Input
-A text file containing a list of Ensembl transcript IDs (text file name defined in `./config/config.toml`)
+A text file containing a list of Ensembl transcript IDs (text file name defined in `./src/config/config.toml`)
 
 For example, a text file containing:
 ```python 
@@ -22,10 +22,10 @@ ENST00000559488
 ```
 
 # Output
-An excel file containing the corresponding protein domains (excel file name defined in `./config/config.toml`).
+An excel file containing the corresponding protein domains (excel file name defined in `./src/config/config.toml`).
 
 # Execution Flow
-1. Set the configuration parameters in `./config/config.toml`
+1. Set the configuration parameters in `./src/config/config.toml`
 1. Run `./src/main.py`
 
 # Requirements

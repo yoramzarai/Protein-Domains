@@ -77,14 +77,14 @@ def dfs_to_excel_file(dfs: list[pd.DataFrame], excel_file_name: str, sheet_names
                 for col_num, value in enumerate(df.columns.values):
                     worksheet.write(0, col_num, value, h_format)
 
-def load_transcripts_excel(cnfg_data: dict) ->list[str]:
+def load_transcripts_csv(cnfg_data: dict) ->list[str]:
     """
     Loading transcript IDs from the input csv file and returning the transcript IDs. 
     
     CURRENTLY NOT SUPPORTED !!
     """
     try:
-        return pd.read_csv(cnfg_data['Transcript']['csv_file'], sep=',')[cnfg_data['Transcript']['csv_file_transcript_col_name']].unique().tolist()
+        return pd.read_csv(cnfg_data['Transcript']['csv_file'], sep=cnfg_data['Transcript']['csv_sep'])[cnfg_data['Transcript']['csv_file_transcript_col_name']].unique().tolist()
     except (FileNotFoundError, KeyError) as e:
         print(f"Error in loading transcripts from the column {cnfg_data['Transcript']['csv_file_transcript_col_name']} in {cnfg_data['Transcript']['csv_file']} file: {e}")
         raise
