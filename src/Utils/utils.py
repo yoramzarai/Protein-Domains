@@ -106,18 +106,18 @@ def get_transcripts_IDs(cnfg_data: dict, transcripts: list[str]) -> dict[str,dic
     info: dict = {}
     for transcript in transcripts:
         # Gene ID and name
-        if cnfg_data['IDs']['get_gene_name'] or cnfg_data['IDs']['get_gene_id']:
+        if cnfg_data['IDs']['show_gene_name'] or cnfg_data['IDs']['show_gene_id']:
             ensg_id = rapi.get_transcript_parent(transcript)
-            if cnfg_data['IDs']['get_gene_name'] :
+            if cnfg_data['IDs']['show_gene_name'] :
                 ensg_name = '' if ensg_id == '' else rapi.ENSG_id2symbol(ensg_id)
 
         uniprot_id = uput.ensembl_id2uniprot_id(transcript)
         info[transcript] = {
-            Labels.Protein_ID: rapi.transcript_id2protein_id(transcript) if cnfg_data['IDs']['get_protein_id'] else '',
-            Labels.Gene_ID: ensg_id if cnfg_data['IDs']['get_gene_id'] else '',
-            Labels.Gene_name: ensg_name if cnfg_data['IDs']['get_gene_name'] else '',
+            Labels.Protein_ID: rapi.transcript_id2protein_id(transcript) if cnfg_data['IDs']['show_protein_id'] else '',
+            Labels.Gene_ID: ensg_id if cnfg_data['IDs']['show_gene_id'] else '',
+            Labels.Gene_name: ensg_name if cnfg_data['IDs']['show_gene_name'] else '',
             Labels.UniProt_ID: uniprot_id,
-            Labels.UniProt_URL: get_uniprot_url(uniprot_id) if cnfg_data['IDs']['get_uniprot_url'] else ''
+            Labels.UniProt_URL: get_uniprot_url(uniprot_id) if cnfg_data['IDs']['show_uniprot_url'] else ''
         }
     return info
 
@@ -135,23 +135,24 @@ def get_uniprot_domains(cnfg_data: dict, transcripts_ids: dict[str,dict[str,str]
         } | transcript_ids
     return info
 
-
 def _append_optional_IDs_to_df(cnfg_data: dict, df: pd.DataFrame, start_index: int, ids_dict: dict) -> pd.DataFrame:
     """Append optional ID columns based on configuration to inut dataframe."""
     dfc = df.copy()
-    if cnfg_data['IDs']['get_gene_id']:
+    if cnfg_data['IDs']['show_uniprot_id']:
+        dfc.insert(start_index, Labels.UniProt_ID, ids_dict[Labels.UniProt_ID])
+        start_index += 1
+    if cnfg_data['IDs']['show_gene_id']:
         dfc.insert(start_index, Labels.Gene_ID, ids_dict[Labels.Gene_ID])
         start_index += 1
-    if cnfg_data['IDs']['get_gene_name']:
+    if cnfg_data['IDs']['show_gene_name']:
         dfc.insert(start_index, Labels.Gene_name, ids_dict[Labels.Gene_name])
         start_index += 1
-    if cnfg_data['IDs']['get_protein_id']:
+    if cnfg_data['IDs']['show_protein_id']:
         dfc.insert(start_index, Labels.Protein_ID, ids_dict[Labels.Protein_ID])
         start_index += 1
-    if cnfg_data['IDs']['get_uniprot_url']:
+    if cnfg_data['IDs']['show_uniprot_url']:
         dfc.insert(start_index, Labels.UniProt_URL, ids_dict[Labels.UniProt_URL])
     return dfc
-
 
 def _gen_basic_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> pd.DataFrame:
     """Generate a dataframe with all transcripts, where each domain is listed in a separate row."""
@@ -159,11 +160,9 @@ def _gen_basic_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,d
     for k, v in transcripts_domains.items():
         df: pd.DataFrame = v['domains_df'].copy()
         df.insert(0, Labels.Transcript_ID, k)
-        df.insert(1, Labels.UniProt_ID, v[Labels.UniProt_ID])
-        df = _append_optional_IDs_to_df(cnfg_data, df, 2, v)
+        df = _append_optional_IDs_to_df(cnfg_data, df, 1, v)
         all_dfs.append(df)
     return pd.concat(all_dfs).reset_index(drop=True)
-
 
 def _gen_compact_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> pd.DataFrame:
     """Generate a dataframe with all transcripts, where all domains of a transcript are aggregate into a single row."""
@@ -171,31 +170,11 @@ def _gen_compact_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str
     for k, v in transcripts_domains.items():
         df = pd.DataFrame({
             Labels.Transcript_ID: k,
-            Labels.UniProt_ID: v[Labels.UniProt_ID]
         }, index=[0])
-        df = _append_optional_IDs_to_df(cnfg_data, df, 2, v)
+        df = _append_optional_IDs_to_df(cnfg_data, df, 1, v)
         df[Labels.Domains] = "|".join([",".join([f"{k}:{v}" for k, v in x.items()]) for x in v['domains_list']])
         all_dfs.append(df)
     return pd.concat(all_dfs).reset_index(drop=True)
-
-# def _gen_compact_domain_dataframe(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> pd.DataFrame:
-#     """Generate a dataframe with all transcripts, where all domains of a transcript are aggregate into a single row."""
-#     all_dfs: list = []
-#     for k, v in transcripts_domains.items():
-#         df = pd.DataFrame({
-#             Labels.Transcript_ID: k,
-#             Labels.UniProt_ID: v[Labels.UniProt_ID],
-#             Labels.Gene_ID: v[Labels.Gene_ID],
-#             Labels.Gene_name: v[Labels.Gene_name],
-#             Labels.Protein_ID: v[Labels.Protein_ID],
-#             Labels.UniProt_URL: v[Labels.UniProt_URL]
-#         }, index=[0])
-#         df[Labels.Domains] = "|".join([",".join([f"{k}:{v}" for k, v in x.items()]) for x in v['domains_list']])
-#         drop_cols = ['' if cnfg_data['IDs']['get_gene_id'] else Labels.Gene_ID ] + ['' if cnfg_data['IDs']['get_gene_name'] else Labels.Gene_name] +\
-#         ['' if cnfg_data['IDs']['get_protein_id'] else Labels.Protein_ID] + ['' if cnfg_data['IDs']['get_uniprot_url'] else Labels.UniProt_URL]
-#         df.drop(columns=[x for x in drop_cols if x != ''], inplace=True)
-#         all_dfs.append(df)
-#     return pd.concat(all_dfs).reset_index(drop=True)
 
 def generate_output_table(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> tuple[list[pd.DataFrame],list[str]]:
     """Returns the output dataframe containing IDs and domains."""
@@ -209,10 +188,10 @@ def generate_output_table(cnfg_data: dict, transcripts_domains: dict[str,dict]) 
         case 'expanded':
             df = _gen_basic_domain_dataframe(cnfg_data, transcripts_domains)
             transcript_IDs, dfs = zip(*list(df.groupby(by=Labels.Transcript_ID)))  # sheet name is the transcript ID
+            dfs = [dfx.drop(columns=[Labels.Transcript_ID]) for dfx in dfs]  # remove transcript ID columns, since it is the sheet name
         case _:
             raise ValueError(f"Output format {cnfg_data['Output']['format']} is no supported. Please check configuration file, under ['Output']['format'] !!")
     return dfs, transcript_IDs
-
 
 def generate_output_file(cnfg_data: dict, transcripts_domains: dict[str,dict]) -> None:
     """Generates the ouput file containing the IDs and domains"""

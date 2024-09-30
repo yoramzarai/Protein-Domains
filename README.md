@@ -25,7 +25,7 @@ ENST00000559488
 An excel file containing the corresponding protein domains (excel file name defined in `./config/config.toml`).
 
 # Execution Flow
-1. Set the required parameters in `./config/config.toml`
+1. Set the configuration parameters in `./config/config.toml`
 1. Run `./src/main.py`
 
 # Requirements

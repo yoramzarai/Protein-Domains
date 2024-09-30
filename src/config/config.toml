@@ -8,21 +8,22 @@ Author = "YZ"
 
 [Transcript]
 text_file = "./src/data/transcript_list_DE.txt"  # Set the text file name containing Ensembl transcript ID per line
-csv_file = ".src/data/?.csv"  # Loading from a CSV file (comma separated). CURRENTLY NOT SUPPORTED
-csv_file_transcript_col_name = "Transcript_ID"  # column name in csv_file containing the transcript IDs. CURRENTLY NOT SUPPORTED
+#csv_file = ".src/data/?.csv"  # Loading from a CSV file (comma separated). CURRENTLY NOT SUPPORTED
+#csv_file_transcript_col_name = "Transcript_ID"  # column name in csv_file containing the transcript IDs. CURRENTLY NOT SUPPORTED
 
 
 [Assembly]
-version = "GRCh38"  # Set the Assembly to use ("GRCh38" or "GRCh37")
+version = "GRCh38"  # Set the Assembly to use (valid values are "GRCh38" or "GRCh37")
 
 [IDs]
-get_gene_id = true  # Set true [false] to enable [disable] gene ID retrieval
-get_gene_name = true  # Set true [false] to enable [disable] gene name retrieval
-get_protein_id = true  # Set true [false] to enable [disable] protein ID retrieval
-get_uniprot_url = true  # Set true [false] to enable [disable] UniProt URL retrieval
+show_gene_id = true  # Set true [false] to enable [disable] reporting gene ID
+show_gene_name = true  # Set true [false] to enable [disable] reporting gene name
+show_protein_id = true  # Set true [false] to enable [disable] reporting protein ID
+show_uniprot_id = true  # Set true [false] to enable [disable] reporting UniProt ID
+show_uniprot_url = true  # Set true [false] to enable [disable] reporting UniProt URL
 
 [Domains]
-uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of featuers to retrieve. Set to [] to get all features.
+uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of featuers to retrieve. Set to [] to retrieve all features.
 
 [Output]
 file = "./src/output/transcript_domains_DE.xlsx"  # Set the output excel file name
