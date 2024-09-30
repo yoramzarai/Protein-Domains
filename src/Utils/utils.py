@@ -32,8 +32,8 @@ def check_configuration(cnfg_data: dict) -> None:
     """Check configuration validity."""
     assert cnfg_data['Assembly']['version'] in ["GRCh37", "GRCh38"], f"Aeembly version {cnfg_data['Assembly']['version']} not supported !!"
     assert cnfg_data['Output']['format'] in ["basic", "compact", "expanded"], f"Output format {cnfg_data['Output']['format']} not supported !!"
-    if not pathlib.Path(cnfg_data['Transcript']['text_file']).is_file():
-        raise FileNotFoundError(f"Cannot find input transcript file {cnfg_data['Transcript']['text_file']} !!")
+    if not pathlib.Path(cnfg_data['Transcript']['file']).is_file():
+        raise FileNotFoundError(f"Cannot find input transcript file {cnfg_data['Transcript']['file']} !!")
     if not isinstance(cnfg_data['Domains']['uniprot_features'], list):
         raise TypeError(f"Domain:features in {Cnfg_Toml_file} must contain a list of UniProt domains !!")
 
@@ -77,25 +77,35 @@ def dfs_to_excel_file(dfs: list[pd.DataFrame], excel_file_name: str, sheet_names
                 for col_num, value in enumerate(df.columns.values):
                     worksheet.write(0, col_num, value, h_format)
 
+def load_transcripts(cnfg_data: dict) ->list[str]:
+    """
+    Loading transcripts from input file.
+    """
+    match (file := pathlib.Path(cnfg_data['Transcript']['file'])).suffix:
+        case ".txt":
+            return load_transcripts_text(cnfg_data)
+        case ".csv":
+            return load_transcripts_csv(cnfg_data)
+        case _:
+            raise ValueError(f"Input file {file} format not supported !!")
+
 def load_transcripts_csv(cnfg_data: dict) ->list[str]:
     """
     Loading transcript IDs from the input csv file and returning the transcript IDs. 
-    
-    CURRENTLY NOT SUPPORTED !!
     """
     try:
-        return pd.read_csv(cnfg_data['Transcript']['csv_file'], sep=cnfg_data['Transcript']['csv_sep'])[cnfg_data['Transcript']['csv_file_transcript_col_name']].unique().tolist()
+        return pd.read_csv(cnfg_data['Transcript']['file'], sep=cnfg_data['Transcript']['csv_sep'])[cnfg_data['Transcript']['csv_file_transcript_col_name']].unique().tolist()
     except (FileNotFoundError, KeyError) as e:
-        print(f"Error in loading transcripts from the column {cnfg_data['Transcript']['csv_file_transcript_col_name']} in {cnfg_data['Transcript']['csv_file']} file: {e}")
+        print(f"Error in loading transcripts from the column {cnfg_data['Transcript']['csv_file_transcript_col_name']} in {cnfg_data['Transcript']['file']} file: {e}")
         raise
 
 def load_transcripts_text(cnfg_data: dict) -> list[str]:
     """Loading transcript IDs from the input text file and returning the transcript IDs."""
     try:
-        with open(cnfg_data['Transcript']['text_file'], 'rt', encoding='UTF-8') as fp:
+        with open(cnfg_data['Transcript']['file'], 'rt', encoding='UTF-8') as fp:
             return [x for x in [line.rstrip() for line in fp] if 'ENST' in x]
     except FileNotFoundError:
-        print(f"Can not find input transcripts file {cnfg_data['Transcript']['text_file']}. Please check configuration file, under ['Transcript']['text_file'] !!")
+        print(f"Can not find input transcripts file {cnfg_data['Transcript']['file']}. Please check configuration file, under ['Transcript']['file'] !!")
         raise
 
 def get_transcripts_IDs(cnfg_data: dict, transcripts: list[str]) -> dict[str,dict[str,str]]:

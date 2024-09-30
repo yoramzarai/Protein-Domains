@@ -17,9 +17,9 @@ def main() -> None:
         u.print_config(cnfg_data)
 
     # load transcripts and remove version (if exists)
-    transcripts = [x.split('.')[0] for x in u.load_transcripts_text(cnfg_data)]
+    transcripts = [x.split('.')[0] for x in u.load_transcripts(cnfg_data)]
     if debug:
-        print(f"\nLoaded {len(transcripts):,} transcripts:\n{transcripts}")
+        print(f"\nLoaded {len(transcripts):,} transcripts from {cnfg_data['Transcript']['file']}:\n{transcripts}")
 
     # get IDs
     transcripts_ids = u.get_transcripts_IDs(cnfg_data, transcripts)

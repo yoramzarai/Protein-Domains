@@ -12,9 +12,9 @@ Given a list of Ensembl transcript IDs (i.e. ENST IDs), we:
 `./src/config/config.toml`
 
 # Input
-A text file containing a list of Ensembl transcript IDs (text file name defined in `./src/config/config.toml`)
+A text file or a CSV file containing the Ensembl transcript IDs (file name defined in `./src/config/config.toml`). In case of a text file, each transcript ID is listed in a separate line. In case of a CSV file, the column name holding the transcript IDs, and the CSV delimiter must be defined in `./src/config/config.toml`.
 
-For example, a text file containing:
+For example (in case of a text file):
 ```python 
 ENST00000288135
 ENST00000302278
