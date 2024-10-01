@@ -1,16 +1,17 @@
-# Protein domains configuration.
+# Protein domains configuration file.
 
 [Framework]
 Name = "UniProt Protein Domains"
 Name_verbose = "Retrieve UniProt protein domains given Ensembl transcript ID."
-Version = "0.1"
+Version = "0.2"
 Author = "YZ"
 
 [Transcript]
-# File containing the transcript IDs. Accepted file formats:
+# File containing the transcript IDs. 
+# Accepted file formats:
 # 1. Text file - extension .txt
 # 2. CSV file - extension .csv. In this case, csv_file_transcript_col_name defines the column holding
-#               the transcripts IDs, and csv_sep defines the CSV delimiter
+#               the transcripts IDs, and csv_sep defines the CSV file delimiter
 file = "./src/data/transcript_list_DE.txt"  # either a .txt file or a .csv file
 #file = "./src/data/candidate_info.csv"
 csv_file_transcript_col_name = "trans_id"  # in case of a .csv file, the column name in the CSV file containing the transcript IDs.
@@ -30,7 +31,7 @@ show_uniprot_url = true  # Set true [false] to enable [disable] reporting UniPro
 uniprot_features = ["Topological domain", "Transmembrane", "Domain", "Repeat", "Region"]  # Set the list of features to retrieve. Set to [] to retrieve all features.
 
 [Output]
-file = "./src/output/transcript_domains_DE.csv"  # Set the output file (accepted formats are excel (i.e. .xlsx file) or CSV (i.e. .csv file))
+file = "./src/output/transcript_domains_DE.xlsx"  # Set the output file (accepted formats are excel (i.e. .xlsx file) or CSV (i.e. .csv file))
 format = "expanded"  # Set to "basic": all transcripts and domains are listed together (in one excel sheet if using excel file), where each row represents a domain.
                 # Set to "compact": all transcripts and domains are listed together (in one excel sheet if using excel file), where each row represents a transcript 
                 # (all domains are aggregated in one cell, domains are '|' separated, domain's fields are ',' separated.)
